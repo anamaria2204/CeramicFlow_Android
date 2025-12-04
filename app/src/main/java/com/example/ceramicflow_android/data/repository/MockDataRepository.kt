@@ -7,7 +7,19 @@ import com.example.ceramicflow_android.data.model.CeramicType
 import kotlinx.coroutines.delay
 import java.util.UUID
 
-class MockDataRepository {
+class MockDataRepository private constructor() {
+    
+    companion object {
+        @Volatile
+        private var INSTANCE: MockDataRepository? = null
+        
+        fun getInstance(): MockDataRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: MockDataRepository().also { INSTANCE = it }
+            }
+        }
+    }
+    
     // Simulating a database with mock data
     private val bookings = mutableListOf(
         Booking(

@@ -17,7 +17,7 @@ sealed class BookingDetailUiState {
 }
 
 class BookingDetailViewModel(
-    private val dataRepository: MockDataRepository = MockDataRepository()
+    private val dataRepository: MockDataRepository = MockDataRepository.getInstance()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<BookingDetailUiState>(BookingDetailUiState.Loading)
