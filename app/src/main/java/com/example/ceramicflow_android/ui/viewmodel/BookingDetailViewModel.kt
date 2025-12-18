@@ -1,82 +1,67 @@
 package com.example.ceramicflow_android.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.ceramicflow_android.data.model.Booking
+import com.example.ceramicflow_android.CeramicFlowApplication
 import com.example.ceramicflow_android.data.model.CeramicItem
-import com.example.ceramicflow_android.data.repository.MockDataRepository
+import com.example.ceramicflow_android.data.repository.AuthRepository
+import com.example.ceramicflow_android.data.repository.CeramicRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
-sealed class BookingDetailUiState {
-    object Loading : BookingDetailUiState()
-    data class Success(val booking: Booking) : BookingDetailUiState()
-    data class Error(val message: String) : BookingDetailUiState()
+sealed class CeramicDetailUiState {
+    object Loading : CeramicDetailUiState()
+    data class Success(val ceramic: CeramicItem) : CeramicDetailUiState()
+    data class Error(val message: String) : CeramicDetailUiState()
 }
 
-class BookingDetailViewModel(
-    private val dataRepository: MockDataRepository = MockDataRepository.getInstance()
-) : ViewModel() {
+// TODO: Rename this class to CeramicDetailViewModel for clarity
+class CeramicDetailViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow<BookingDetailUiState>(BookingDetailUiState.Loading)
-    val uiState: StateFlow<BookingDetailUiState> = _uiState.asStateFlow()
+    private val ceramicRepository: CeramicRepository
+    private val authRepository: AuthRepository
 
-    private val _operationStatus = MutableStateFlow<String?>(null)
-    val operationStatus: StateFlow<String?> = _operationStatus.asStateFlow()
+    private val _uiState = MutableStateFlow<CeramicDetailUiState>(CeramicDetailUiState.Loading)
+    val uiState: StateFlow<CeramicDetailUiState> = _uiState.asStateFlow()
 
-    fun loadBooking(bookingId: String) {
+    init {
+        val app = application as CeramicFlowApplication
+        ceramicRepository = app.ceramicRepository
+        authRepository = app.authRepository
+    }
+
+    fun loadCeramic(ceramicId: String) {
         viewModelScope.launch {
-            _uiState.value = BookingDetailUiState.Loading
+            _uiState.value = CeramicDetailUiState.Loading
             try {
-                val booking = dataRepository.getBookingById(bookingId)
-                if (booking != null) {
-                    _uiState.value = BookingDetailUiState.Success(booking)
+                val user = authRepository.getLoggedInUser()
+                if (user == null) {
+                    _uiState.value = CeramicDetailUiState.Error("User not logged in")
+                    return@launch
+                }
+
+                // Find the specific item from the correct flow based on user role
+                val ceramic = (if (user.isAdmin) {
+                    ceramicRepository.getAllItems()
                 } else {
-                    _uiState.value = BookingDetailUiState.Error("Booking not found")
+                    ceramicRepository.getItemsForUser(user.id)
+                }).firstOrNull()?.find { it.id == ceramicId }
+
+                if (ceramic != null) {
+                    _uiState.value = CeramicDetailUiState.Success(ceramic)
+                } else {
+                    _uiState.value = CeramicDetailUiState.Error("Ceramic not found or not accessible")
                 }
             } catch (e: Exception) {
-                _uiState.value = BookingDetailUiState.Error(
-                    e.message ?: "Failed to load booking"
+                _uiState.value = CeramicDetailUiState.Error(
+                    e.message ?: "Failed to load ceramic details"
                 )
             }
         }
-    }
-
-    fun addItem(bookingId: String, item: CeramicItem) {
-        viewModelScope.launch {
-            try {
-                val success = dataRepository.addItemToBooking(bookingId, item)
-                if (success) {
-                    _operationStatus.value = "Item added successfully"
-                    loadBooking(bookingId) // Refresh the booking
-                } else {
-                    _operationStatus.value = "Failed to add item"
-                }
-            } catch (e: Exception) {
-                _operationStatus.value = "Error: ${e.message}"
-            }
-        }
-    }
-
-    fun deleteItem(bookingId: String, itemId: String) {
-        viewModelScope.launch {
-            try {
-                val success = dataRepository.deleteItemFromBooking(bookingId, itemId)
-                if (success) {
-                    _operationStatus.value = "Item deleted successfully"
-                    loadBooking(bookingId) // Refresh the booking
-                } else {
-                    _operationStatus.value = "Failed to delete item"
-                }
-            } catch (e: Exception) {
-                _operationStatus.value = "Error: ${e.message}"
-            }
-        }
-    }
-
-    fun clearOperationStatus() {
-        _operationStatus.value = null
     }
 }

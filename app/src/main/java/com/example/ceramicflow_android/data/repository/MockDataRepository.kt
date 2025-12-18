@@ -29,8 +29,8 @@ class MockDataRepository private constructor() {
             timeSlot = "10:00 - 12:00",
             status = BookingStatus.PENDING,
             items = mutableListOf(
-                CeramicItem("i1", "Cana mare", CeramicType.MUG, 2, "Cu model floral"),
-                CeramicItem("i2", "Ceasca cafea", CeramicType.COFFEE_CUP, 4, "Set espresso")
+                CeramicItem("i1", "Cana mare", CeramicType.MUG, 2, "Cu model floral", "2"),
+                CeramicItem("i2", "Ceasca cafea", CeramicType.COFFEE_CUP, 4, "Set espresso", "2")
             )
         ),
         Booking(
@@ -40,8 +40,8 @@ class MockDataRepository private constructor() {
             timeSlot = "14:00 - 16:00",
             status = BookingStatus.IN_PROGRESS,
             items = mutableListOf(
-                CeramicItem("i3", "Farfurie", CeramicType.PLATE, 6, "Diametru 25cm"),
-                CeramicItem("i4", "Bol", CeramicType.BOWL, 3, "Pentru supa")
+                CeramicItem("i3", "Farfurie", CeramicType.PLATE, 6, "Diametru 25cm", "1"),
+                CeramicItem("i4", "Bol", CeramicType.BOWL, 3, "Pentru supa", "1")
             )
         ),
         Booking(
@@ -51,8 +51,8 @@ class MockDataRepository private constructor() {
             timeSlot = "09:00 - 11:00",
             status = BookingStatus.PENDING,
             items = mutableListOf(
-                CeramicItem("i5", "Vaza", CeramicType.VASE, 1, "Stil modern"),
-                CeramicItem("i6", "Cana mica", CeramicType.MUG, 2, "Pentru copii")
+                CeramicItem("i5", "Vaza", CeramicType.VASE, 1, "Stil modern", "3"),
+                CeramicItem("i6", "Cana mica", CeramicType.MUG, 2, "Pentru copii", "3")
             )
         ),
         Booking(
@@ -62,8 +62,8 @@ class MockDataRepository private constructor() {
             timeSlot = "15:00 - 17:00",
             status = BookingStatus.COMPLETED,
             items = mutableListOf(
-                CeramicItem("i7", "Set cafea", CeramicType.COFFEE_CUP, 6, "Cu farfurioare"),
-                CeramicItem("i8", "Cana mare", CeramicType.MUG, 1, "Personalizata")
+                CeramicItem("i7", "Set cafea", CeramicType.COFFEE_CUP, 6, "Cu farfurioare", "4"),
+                CeramicItem("i8", "Cana mare", CeramicType.MUG, 1, "Personalizata", "4")
             )
         ),
         Booking(
@@ -73,8 +73,8 @@ class MockDataRepository private constructor() {
             timeSlot = "11:00 - 13:00",
             status = BookingStatus.PENDING,
             items = mutableListOf(
-                CeramicItem("i9", "Farfurii desert", CeramicType.PLATE, 8, "Diametru 20cm"),
-                CeramicItem("i10", "Boluri cereale", CeramicType.BOWL, 4, "Design minimalist")
+                CeramicItem("i9", "Farfurii desert", CeramicType.PLATE, 8, "Diametru 20cm", "5"),
+                CeramicItem("i10", "Boluri cereale", CeramicType.BOWL, 4, "Design minimalist", "5")
             )
         )
     )
