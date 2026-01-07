@@ -7,21 +7,19 @@ import kotlinx.coroutines.flow.Flow
 
 class CeramicRepository(private val ceramicItemDao: CeramicItemDao, private val apiService: ApiService) {
 
-    // This function now fetches from the REAL server and updates the local database.
-    suspend fun refreshCeramicItems() {
-        try {
-            // Fetch from the network
-            val networkItems = apiService.getCeramics()
-            // Save the result to the local database
-            ceramicItemDao.insertAll(networkItems)
-        } catch (e: Exception) {
-            // Handle exceptions, e.g., network down, server error
-            // For now, we just let it fail, but you could add logging or error handling.
-            throw e
-        }
+    // --- Funcția nouă pentru a observa un singur obiect ---
+    fun getCeramicById(id: String): Flow<CeramicItem?> {
+        return ceramicItemDao.getItemById(id)
     }
 
-    // The rest of the app reads from the database, which is the Single Source of Truth
+    suspend fun refreshCeramicItems() {
+        try {
+            val networkItems = apiService.getCeramics()
+            ceramicItemDao.insertAll(networkItems)
+        } catch (e: Exception) {
+            // Handle network errors
+        }
+    }
 
     fun getItemsForUser(userId: String): Flow<List<CeramicItem>> {
         return ceramicItemDao.getItemsByUserId(userId)

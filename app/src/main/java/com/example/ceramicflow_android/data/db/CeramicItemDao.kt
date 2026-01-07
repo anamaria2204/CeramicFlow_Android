@@ -13,6 +13,10 @@ interface CeramicItemDao {
     @Query("SELECT * FROM ceramic_items")
     fun getAllItems(): Flow<List<CeramicItem>>
 
+    // --- Funcția nouă pentru a observa un singur obiect ---
+    @Query("SELECT * FROM ceramic_items WHERE id = :id")
+    fun getItemById(id: String): Flow<CeramicItem?>
+
     @Query("SELECT * FROM ceramic_items WHERE userId = :userId")
     fun getItemsByUserId(userId: String): Flow<List<CeramicItem>>
 
@@ -20,5 +24,5 @@ interface CeramicItemDao {
     suspend fun insertAll(items: List<CeramicItem>)
 
     @Query("DELETE FROM ceramic_items")
-    suspend fun deleteAll()
+    suspend fun deleteAllItems()
 }

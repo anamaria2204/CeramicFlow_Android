@@ -5,16 +5,17 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.example.ceramicflow_android.data.model.Booking
 import com.example.ceramicflow_android.data.model.CeramicItem
-import com.example.ceramicflow_android.data.model.CeramicTypeConverter
 import com.example.ceramicflow_android.data.model.User
 
-@Database(entities = [CeramicItem::class, User::class], version = 3, exportSchema = false)
-@TypeConverters(CeramicTypeConverter::class)
+@Database(entities = [CeramicItem::class, User::class, Booking::class], version = 4, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class CeramicFlowDatabase : RoomDatabase() {
 
     abstract fun ceramicItemDao(): CeramicItemDao
     abstract fun userDao(): UserDao
+    abstract fun bookingDao(): BookingDao
 
     companion object {
         @Volatile

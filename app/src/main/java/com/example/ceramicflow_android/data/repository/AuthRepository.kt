@@ -1,6 +1,7 @@
 package com.example.ceramicflow_android.data.repository
 
 import com.example.ceramicflow_android.data.api.ApiService
+import com.example.ceramicflow_android.data.api.RetrofitClient
 import com.example.ceramicflow_android.data.datastore.UserPreferencesRepository
 import com.example.ceramicflow_android.data.db.UserDao
 import com.example.ceramicflow_android.data.model.LoginRequest
@@ -20,6 +21,9 @@ class AuthRepository(
 
             if (response.isSuccessful && response.body() != null) {
                 val serverResponse = response.body()!!
+
+                RetrofitClient.setAuthToken(serverResponse.token)
+
                 userPreferencesRepository.saveAuthToken(serverResponse.token)
                 userPreferencesRepository.saveUserId(serverResponse.user.id)
                 userDao.insertUser(serverResponse.user)

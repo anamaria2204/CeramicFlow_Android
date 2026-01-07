@@ -1,5 +1,7 @@
 package com.example.ceramicflow_android.data.api
 
+import com.example.ceramicflow_android.data.model.Booking
+import com.example.ceramicflow_android.data.model.BookingRequest
 import com.example.ceramicflow_android.data.model.CeramicItem
 import com.example.ceramicflow_android.data.model.LoginRequest
 import com.example.ceramicflow_android.data.model.LoginResponse
@@ -18,4 +20,11 @@ interface ApiService {
 
     @POST("register")
     suspend fun register(@Body request: LoginRequest): Response<LoginResponse>
+
+    @POST("bookings")
+    suspend fun createBooking(@Body bookingRequest: BookingRequest): Response<Booking>
+
+    // --- Endpoint nou pentru a prelua programările ---
+    @GET("bookings")
+    suspend fun getBookings(): List<Booking>
 }

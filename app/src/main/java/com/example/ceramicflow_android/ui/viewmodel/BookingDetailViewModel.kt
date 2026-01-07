@@ -2,66 +2,41 @@ package com.example.ceramicflow_android.ui.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.example.ceramicflow_android.CeramicFlowApplication
 import com.example.ceramicflow_android.data.model.CeramicItem
-import com.example.ceramicflow_android.data.repository.AuthRepository
 import com.example.ceramicflow_android.data.repository.CeramicRepository
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.launch
-
-sealed class CeramicDetailUiState {
-    object Loading : CeramicDetailUiState()
-    data class Success(val ceramic: CeramicItem) : CeramicDetailUiState()
-    data class Error(val message: String) : CeramicDetailUiState()
-}
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 // TODO: Rename this class to CeramicDetailViewModel for clarity
-class CeramicDetailViewModel(application: Application) : AndroidViewModel(application) {
+class CeramicDetailViewModel(application: Application, savedStateHandle: SavedStateHandle) : AndroidViewModel(application) {
 
+    private val ceramicId: String = savedStateHandle.get<String>("ceramicId")!!
     private val ceramicRepository: CeramicRepository
-    private val authRepository: AuthRepository
 
-    private val _uiState = MutableStateFlow<CeramicDetailUiState>(CeramicDetailUiState.Loading)
-    val uiState: StateFlow<CeramicDetailUiState> = _uiState.asStateFlow()
+    // The UI state is now a direct, reactive flow from the database
+    val uiState: StateFlow<UiState<CeramicItem>>
 
     init {
         val app = application as CeramicFlowApplication
         ceramicRepository = app.ceramicRepository
-        authRepository = app.authRepository
-    }
 
-    fun loadCeramic(ceramicId: String) {
-        viewModelScope.launch {
-            _uiState.value = CeramicDetailUiState.Loading
-            try {
-                val user = authRepository.getLoggedInUser()
-                if (user == null) {
-                    _uiState.value = CeramicDetailUiState.Error("User not logged in")
-                    return@launch
-                }
-
-                // Find the specific item from the correct flow based on user role
-                val ceramic = (if (user.isAdmin) {
-                    ceramicRepository.getAllItems()
-                } else {
-                    ceramicRepository.getItemsForUser(user.id)
-                }).firstOrNull()?.find { it.id == ceramicId }
-
+        uiState = ceramicRepository.getCeramicById(ceramicId)
+            .map { ceramic ->
                 if (ceramic != null) {
-                    _uiState.value = CeramicDetailUiState.Success(ceramic)
+                    UiState.Success(ceramic)
                 } else {
-                    _uiState.value = CeramicDetailUiState.Error("Ceramic not found or not accessible")
+                    UiState.Error("Ceramic not found or not yet synced.")
                 }
-            } catch (e: Exception) {
-                _uiState.value = CeramicDetailUiState.Error(
-                    e.message ?: "Failed to load ceramic details"
-                )
             }
-        }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = UiState.Loading
+            )
     }
 }
