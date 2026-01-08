@@ -132,7 +132,6 @@ fun LoginScreen(
                 }
             }
 
-            // Error message
             if (uiState is LoginUiState.Error) {
                 Text(
                     text = (uiState as LoginUiState.Error).message,
@@ -141,14 +140,6 @@ fun LoginScreen(
                     modifier = Modifier.padding(top = 16.dp)
                 )
             }
-
-            // Helper text
-            Text(
-                text = "Demo credentials: admin/admin123 or user/user123",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 32.dp)
-            )
         }
     }
 }

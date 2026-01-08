@@ -1,17 +1,34 @@
 package com.example.ceramicflow_android.data.model
 
-data class Booking(
-    val id: String,
-    val clientName: String,
-    val date: String,
-    val timeSlot: String,
-    val status: BookingStatus,
-    val items: MutableList<CeramicItem> = mutableListOf()
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
+
+/**
+ * Reprezintă datele necesare pentru a crea un obiect ceramic nou.
+ */
+data class NewCeramicData(
+    val name: String,
+    val type: String,
+    val quantity: Int,
+    val description: String
 )
 
-enum class BookingStatus {
-    PENDING,
-    IN_PROGRESS,
-    COMPLETED,
-    CANCELLED
-}
+
+data class BookingRequest(
+    val date: String,
+    val time: String,
+    val userId: String,
+    val newCeramic: NewCeramicData
+)
+
+@Entity(tableName = "bookings")
+data class Booking(
+    @PrimaryKey
+    val id: String,
+    val date: String,
+    val time: String,
+    val userId: String,
+    val ceramic: CeramicItem,
+    var isSynced: Boolean = false
+)

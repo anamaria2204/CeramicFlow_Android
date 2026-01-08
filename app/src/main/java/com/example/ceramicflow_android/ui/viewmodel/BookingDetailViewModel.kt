@@ -1,82 +1,42 @@
 package com.example.ceramicflow_android.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.example.ceramicflow_android.data.model.Booking
+import com.example.ceramicflow_android.CeramicFlowApplication
 import com.example.ceramicflow_android.data.model.CeramicItem
-import com.example.ceramicflow_android.data.repository.MockDataRepository
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.example.ceramicflow_android.data.repository.CeramicRepository
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
-sealed class BookingDetailUiState {
-    object Loading : BookingDetailUiState()
-    data class Success(val booking: Booking) : BookingDetailUiState()
-    data class Error(val message: String) : BookingDetailUiState()
-}
+// TODO: Rename this class to CeramicDetailViewModel for clarity
+class CeramicDetailViewModel(application: Application, savedStateHandle: SavedStateHandle) : AndroidViewModel(application) {
 
-class BookingDetailViewModel(
-    private val dataRepository: MockDataRepository = MockDataRepository.getInstance()
-) : ViewModel() {
+    private val ceramicId: String = savedStateHandle.get<String>("ceramicId")!!
+    private val ceramicRepository: CeramicRepository
 
-    private val _uiState = MutableStateFlow<BookingDetailUiState>(BookingDetailUiState.Loading)
-    val uiState: StateFlow<BookingDetailUiState> = _uiState.asStateFlow()
+    // The UI state is now a direct, reactive flow from the database
+    val uiState: StateFlow<UiState<CeramicItem>>
 
-    private val _operationStatus = MutableStateFlow<String?>(null)
-    val operationStatus: StateFlow<String?> = _operationStatus.asStateFlow()
+    init {
+        val app = application as CeramicFlowApplication
+        ceramicRepository = app.ceramicRepository
 
-    fun loadBooking(bookingId: String) {
-        viewModelScope.launch {
-            _uiState.value = BookingDetailUiState.Loading
-            try {
-                val booking = dataRepository.getBookingById(bookingId)
-                if (booking != null) {
-                    _uiState.value = BookingDetailUiState.Success(booking)
+        uiState = ceramicRepository.getCeramicById(ceramicId)
+            .map { ceramic ->
+                if (ceramic != null) {
+                    UiState.Success(ceramic)
                 } else {
-                    _uiState.value = BookingDetailUiState.Error("Booking not found")
+                    UiState.Error("Ceramic not found or not yet synced.")
                 }
-            } catch (e: Exception) {
-                _uiState.value = BookingDetailUiState.Error(
-                    e.message ?: "Failed to load booking"
-                )
             }
-        }
-    }
-
-    fun addItem(bookingId: String, item: CeramicItem) {
-        viewModelScope.launch {
-            try {
-                val success = dataRepository.addItemToBooking(bookingId, item)
-                if (success) {
-                    _operationStatus.value = "Item added successfully"
-                    loadBooking(bookingId) // Refresh the booking
-                } else {
-                    _operationStatus.value = "Failed to add item"
-                }
-            } catch (e: Exception) {
-                _operationStatus.value = "Error: ${e.message}"
-            }
-        }
-    }
-
-    fun deleteItem(bookingId: String, itemId: String) {
-        viewModelScope.launch {
-            try {
-                val success = dataRepository.deleteItemFromBooking(bookingId, itemId)
-                if (success) {
-                    _operationStatus.value = "Item deleted successfully"
-                    loadBooking(bookingId) // Refresh the booking
-                } else {
-                    _operationStatus.value = "Failed to delete item"
-                }
-            } catch (e: Exception) {
-                _operationStatus.value = "Error: ${e.message}"
-            }
-        }
-    }
-
-    fun clearOperationStatus() {
-        _operationStatus.value = null
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = UiState.Loading
+            )
     }
 }
