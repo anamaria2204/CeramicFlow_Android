@@ -195,8 +195,7 @@ fun CeramicListScreen(
                                 BookingCard(
                                     booking = booking,
                                     isHistory = selectedTabIndex == 1,
-                                    onClick = { onBookingClick(booking.ceramic.id) },
-                                    // Apelăm funcția de ștergere din ViewModel
+                                    onClick = { onBookingClick(booking.id) },
                                     onDeleteClick = { viewModel.deleteBooking(booking) }
                                 )
                             }

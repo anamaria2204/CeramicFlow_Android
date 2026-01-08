@@ -4,7 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.ceramicflow_android.data.model.Booking
+import com.example.ceramicflow_android.data.model.CeramicItem
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -26,4 +28,7 @@ interface BookingDao {
 
     @Query("DELETE FROM bookings")
     suspend fun deleteAllBookings()
+
+    @Update
+    suspend fun updateCeramic(ceramic: CeramicItem)
 }

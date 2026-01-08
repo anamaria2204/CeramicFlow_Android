@@ -73,4 +73,18 @@ class BookingListViewModel(application: Application) : AndroidViewModel(applicat
             }
         }
     }
+
+    fun addPhotoToBooking(bookingId: String, photoUri: String) {
+        viewModelScope.launch {
+            val currentBookings = (_uiState.value as? UiState.Success)?.data ?: return@launch
+            val booking = currentBookings.find { it.id == bookingId } ?: return@launch
+
+            val newImages = booking.ceramic.images + photoUri
+
+            val updatedCeramic = booking.ceramic.copy(images = newImages)
+
+            bookingRepository.updateCeramic(updatedCeramic)
+            loadBookings()
+        }
+    }
 }

@@ -6,27 +6,29 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.example.ceramicflow_android.ui.screens.BookingDetailScreen // IMPORTUL NOU
 import com.example.ceramicflow_android.ui.screens.CreateCeramicScreen
-import com.example.ceramicflow_android.ui.screens.CeramicDetailScreen
 import com.example.ceramicflow_android.ui.screens.CeramicListScreen
 import com.example.ceramicflow_android.ui.screens.LoginScreen
 import com.example.ceramicflow_android.ui.screens.ScheduleBookingScreen
 import com.example.ceramicflow_android.ui.viewmodel.AddBookingViewModel
+import com.example.ceramicflow_android.ui.viewmodel.BookingListViewModel
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object CeramicList : Screen("ceramic_list")
-    object CeramicDetail : Screen("ceramic_detail/{ceramicId}") {
-        fun createRoute(ceramicId: String) = "ceramic_detail/$ceramicId"
+
+    // MODIFICARE: Am redenumit ruta si parametrul pentru a fi BookingDetail
+    object BookingDetail : Screen("booking_detail/{bookingId}") {
+        fun createRoute(bookingId: String) = "booking_detail/$bookingId"
     }
-    // Routes for the nested graph
+
     object AddBookingFlow : Screen("add_booking_flow")
     object CreateCeramic : Screen("create_ceramic")
     object ScheduleBooking : Screen("schedule_booking")
@@ -37,6 +39,10 @@ fun AppNavigation(
     navController: NavHostController,
     startDestination: String = Screen.Login.route
 ) {
+    // Folosim un ViewModel partajat sau instanțiat aici pentru a fi sigur că datele persistă
+    // Notă: BookingDetailScreen are nevoie de lista încărcată.
+    // În mod ideal, ViewModel-ul ar trebui să ia datele din Repository (Room), deci o nouă instanță e OK.
+
     NavHost(
         navController = navController,
         startDestination = startDestination
@@ -49,25 +55,31 @@ fun AppNavigation(
         }
 
         composable(Screen.CeramicList.route) {
+            // Aici putem folosi viewModel() simplu
+            val bookingListViewModel: BookingListViewModel = viewModel()
+
             CeramicListScreen(
                 onAddBookingClick = { navController.navigate(Screen.AddBookingFlow.route) },
-                // Adăugăm parametrul lipsă și corectăm eroarea de scriere
-                onBookingClick = { ceramicId ->
-                    navController.navigate(Screen.CeramicDetail.createRoute(ceramicId))
+                // MODIFICARE: Trimitem bookingId către ruta nouă
+                onBookingClick = { bookingId ->
+                    navController.navigate(Screen.BookingDetail.createRoute(bookingId))
                 },
-                viewModel = viewModel()
+                viewModel = bookingListViewModel
             )
         }
 
+        // MODIFICARE: Ruta pentru BookingDetailScreen
         composable(
-            route = Screen.CeramicDetail.route,
-            arguments = listOf(navArgument("ceramicId") { type = NavType.StringType })
+            route = Screen.BookingDetail.route,
+            arguments = listOf(navArgument("bookingId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val ceramicId = backStackEntry.arguments?.getString("ceramicId") ?: return@composable
-            CeramicDetailScreen(
-                ceramicId = ceramicId,
-                onNavigateBack = { navController.popBackStack() },
-                viewModel = viewModel()
+            val bookingId = backStackEntry.arguments?.getString("bookingId") ?: return@composable
+
+            // Instanțiem noul ecran
+            BookingDetailScreen(
+                bookingId = bookingId,
+                viewModel = viewModel(), // Va încărca datele din baza de date locală
+                onBack = { navController.popBackStack() }
             )
         }
 
