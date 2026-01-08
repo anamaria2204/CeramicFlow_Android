@@ -1,5 +1,7 @@
 package com.example.ceramicflow_android.ui.screens
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +25,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -34,6 +37,10 @@ import com.example.ceramicflow_android.ui.viewmodel.UiState
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.example.ceramicflow_android.util.ShakeDetector
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.Build
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,8 +50,8 @@ fun CeramicListScreen(
     viewModel: BookingListViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    // Stare pentru Tab-ul selectat (0 = Upcoming, 1 = History)
     var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Upcoming", "History")
 
@@ -58,6 +65,24 @@ fun CeramicListScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    DisposableEffect(Unit) {
+        val shakeDetector = ShakeDetector(context) {
+            viewModel.loadBookings()
+            Toast.makeText(context, "📳 Shake detected! Refreshing...", Toast.LENGTH_SHORT).show()
+
+            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+            if (Build.VERSION.SDK_INT >= 26) {
+                vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+            } else {
+                vibrator.vibrate(200)
+            }
+        }
+        shakeDetector.start()
+
+        onDispose {
+            shakeDetector.stop()
         }
     }
 
