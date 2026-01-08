@@ -5,6 +5,7 @@ import com.example.ceramicflow_android.data.db.BookingDao
 import com.example.ceramicflow_android.data.db.CeramicItemDao
 import com.example.ceramicflow_android.data.model.Booking
 import com.example.ceramicflow_android.data.model.BookingRequest
+import com.example.ceramicflow_android.data.model.CeramicItem
 import com.example.ceramicflow_android.data.model.NewCeramicData
 import com.example.ceramicflow_android.util.NotificationHelper
 import kotlinx.coroutines.flow.Flow
@@ -177,5 +178,9 @@ class BookingRepository(
         } catch (e: Exception) {
             Result.failure(Exception("No internet connection. Cannot delete synced booking."))
         }
+    }
+
+    suspend fun updateCeramic(ceramic: CeramicItem) {
+        bookingDao.updateCeramic(ceramic)
     }
 }

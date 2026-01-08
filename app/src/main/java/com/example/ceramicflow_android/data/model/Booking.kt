@@ -11,7 +11,8 @@ data class NewCeramicData(
     val name: String,
     val type: String,
     val quantity: Int,
-    val description: String
+    val description: String,
+    val images: List<String> = emptyList()
 )
 
 

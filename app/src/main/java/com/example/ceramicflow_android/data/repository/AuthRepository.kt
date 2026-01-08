@@ -41,7 +41,6 @@ class AuthRepository(
             val response = apiService.register(request)
 
             if (response.isSuccessful && response.body() != null) {
-                // After a successful registration, we immediately log the user in.
                 login(request)
             } else {
                 Result.failure(Exception("Registration failed: ${response.message()}"))
