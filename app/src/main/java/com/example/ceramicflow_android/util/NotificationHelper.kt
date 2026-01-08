@@ -21,6 +21,7 @@ class NotificationHelper(private val context: Context) {
         private const val ONLINE_NOTIFICATION_ID = 4
         private const val BOOKING_LOCAL_SAVE_ID = 5
         private const val UPLOAD_SUCCESS_ID = 6
+        private const val SUMMARY_SYNC_ID = 6
     }
 
     fun createNotificationChannel() {
@@ -77,7 +78,6 @@ class NotificationHelper(private val context: Context) {
         notificationManager.notify(UPLOAD_SUCCESS_ID, builder.build())
     }
 
-    // --- FUNCȚIA LIPSĂ, ADĂUGATĂ ACUM ---
     fun showOfflineNotification() {
         val builder = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -88,7 +88,6 @@ class NotificationHelper(private val context: Context) {
         notificationManager.notify(OFFLINE_NOTIFICATION_ID, builder.build())
     }
 
-    // --- FUNCȚIA LIPSĂ, ADĂUGATĂ ACUM ---
     fun showOnlineNotification() {
         val builder = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -97,5 +96,23 @@ class NotificationHelper(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setAutoCancel(true)
         notificationManager.notify(ONLINE_NOTIFICATION_ID, builder.build())
+    }
+
+    fun showSummarySyncNotification(count: Int) {
+        val title = "Sunteți din nou Online"
+        val message = if (count == 1) {
+            "1 programare realizată offline a fost sincronizată."
+        } else {
+            "$count programări realizate offline au fost sincronizate."
+        }
+
+        val builder = NotificationCompat.Builder(context, SYNC_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_foreground) // Asigură-te că ai o iconiță validă
+            .setContentTitle(title)
+            .setContentText(message)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // Prioritate mare să o vezi imediat
+            .setAutoCancel(true)
+
+        notificationManager.notify(SUMMARY_SYNC_ID, builder.build())
     }
 }

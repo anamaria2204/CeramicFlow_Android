@@ -13,7 +13,6 @@ interface CeramicItemDao {
     @Query("SELECT * FROM ceramic_items")
     fun getAllItems(): Flow<List<CeramicItem>>
 
-    // --- Funcția nouă pentru a observa un singur obiect ---
     @Query("SELECT * FROM ceramic_items WHERE id = :id")
     fun getItemById(id: String): Flow<CeramicItem?>
 
@@ -25,4 +24,8 @@ interface CeramicItemDao {
 
     @Query("DELETE FROM ceramic_items")
     suspend fun deleteAllItems()
+
+    // --- Funcția nouă pentru curățare ---
+    @Query("DELETE FROM ceramic_items WHERE id = :id")
+    suspend fun deleteById(id: String)
 }

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface BookingDao {
-    @Query("SELECT * FROM bookings ORDER BY date DESC, time DESC")
+    @Query("SELECT * FROM bookings ORDER BY date ASC, time ASC")
     fun getAllBookings(): Flow<List<Booking>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

@@ -14,9 +14,7 @@ data class NewCeramicData(
     val description: String
 )
 
-/**
- * Reprezintă o cerere de creare a unei programări, incluzând datele pentru un obiect nou.
- */
+
 data class BookingRequest(
     val date: String,
     val time: String,
@@ -24,9 +22,6 @@ data class BookingRequest(
     val newCeramic: NewCeramicData
 )
 
-/**
- * Reprezintă o programare completă, stocată atât local, cât și pe server.
- */
 @Entity(tableName = "bookings")
 data class Booking(
     @PrimaryKey
@@ -35,5 +30,5 @@ data class Booking(
     val time: String,
     val userId: String,
     val ceramic: CeramicItem,
-    var isSynced: Boolean = false // Flag pentru a urmări starea de sincronizare
+    var isSynced: Boolean = false
 )

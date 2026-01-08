@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.ceramicflow_android.CeramicFlowApplication
 import com.example.ceramicflow_android.data.model.Booking
 import com.example.ceramicflow_android.data.repository.BookingRepository
+import com.example.ceramicflow_android.util.NetworkConnectivityObserver
+import com.example.ceramicflow_android.util.NotificationHelper
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -18,6 +20,8 @@ sealed class UiState<out T> {
 class BookingListViewModel(application: Application) : AndroidViewModel(application) {
 
     private val bookingRepository: BookingRepository
+    private val notificationHelper: NotificationHelper
+    private val networkObserver: NetworkConnectivityObserver // Monitorul de rețea
 
     private val _uiState = MutableStateFlow<UiState<List<Booking>>>(UiState.Loading)
     val uiState: StateFlow<UiState<List<Booking>>> = _uiState.asStateFlow()
@@ -25,8 +29,10 @@ class BookingListViewModel(application: Application) : AndroidViewModel(applicat
     init {
         val app = application as CeramicFlowApplication
         bookingRepository = app.bookingRepository
+        notificationHelper = app.notificationHelper
+        networkObserver = NetworkConnectivityObserver(application) // Inițializăm monitorul
 
-        // Observe the local database for changes and update the UI
+        // 1. Colectăm datele din baza de date locală (Flow)
         viewModelScope.launch {
             bookingRepository.getBookings()
                 .collect { bookings ->
@@ -34,18 +40,36 @@ class BookingListViewModel(application: Application) : AndroidViewModel(applicat
                 }
         }
 
-        // Trigger a refresh from the server
+        viewModelScope.launch {
+            networkObserver.networkStatus.collect { isConnected ->
+                if (isConnected) {
+                    try {
+                        println("Internet detected: Triggering auto-refresh...")
+                        bookingRepository.refreshBookings()
+                    } catch (e: Exception) {
+                    }
+                }
+            }
+        }
+
         loadBookings()
     }
 
     fun loadBookings() {
         viewModelScope.launch {
             try {
-                // Don't show loading here, as the UI is already showing cached data
                 bookingRepository.refreshBookings()
             } catch (e: Exception) {
-                // If refresh fails, the UI will still show the cached data.
                 _uiState.value = UiState.Error(e.message ?: "Failed to refresh bookings")
+            }
+        }
+    }
+
+    fun deleteBooking(booking: Booking) {
+        viewModelScope.launch {
+            val result = bookingRepository.deleteBooking(booking)
+            result.onFailure { e ->
+                println("Error deleting booking: ${e.message}")
             }
         }
     }

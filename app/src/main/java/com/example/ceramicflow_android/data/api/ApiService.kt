@@ -9,6 +9,8 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.DELETE
+import retrofit2.http.Path
 
 interface ApiService {
 
@@ -24,7 +26,9 @@ interface ApiService {
     @POST("bookings")
     suspend fun createBooking(@Body bookingRequest: BookingRequest): Response<Booking>
 
-    // --- Endpoint nou pentru a prelua programările ---
     @GET("bookings")
     suspend fun getBookings(): List<Booking>
+
+    @DELETE("bookings/{id}")
+    suspend fun deleteBooking(@Path("id") id: String): Response<Unit>
 }

@@ -11,8 +11,10 @@ import com.example.ceramicflow_android.data.repository.AuthRepository
 import com.example.ceramicflow_android.data.repository.BookingRepository
 import com.example.ceramicflow_android.util.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -20,7 +22,7 @@ import java.io.IOException
 sealed class AddBookingUiState {
     object Idle : AddBookingUiState()
     object Loading : AddBookingUiState()
-    data class Success(val booking: Booking) : AddBookingUiState()
+    data class Success(val booking: Booking?, val isOffline: Boolean = false) : AddBookingUiState()
     data class Error(val message: String) : AddBookingUiState()
 }
 
@@ -33,6 +35,8 @@ class AddBookingViewModel(application: Application) : AndroidViewModel(applicati
     private val _uiState = MutableStateFlow<AddBookingUiState>(AddBookingUiState.Idle)
     val uiState: StateFlow<AddBookingUiState> = _uiState.asStateFlow()
 
+    val existingBookings: StateFlow<List<Booking>>
+
     private var tempNewCeramicData: NewCeramicData? = null
 
     init {
@@ -40,6 +44,13 @@ class AddBookingViewModel(application: Application) : AndroidViewModel(applicati
         bookingRepository = app.bookingRepository
         authRepository = app.authRepository
         notificationHelper = app.notificationHelper
+
+        existingBookings = bookingRepository.getBookings()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = emptyList()
+            )
     }
 
     fun setCeramicData(newCeramicData: NewCeramicData) {
@@ -65,21 +76,17 @@ class AddBookingViewModel(application: Application) : AndroidViewModel(applicati
             val result = bookingRepository.createBooking(request)
 
             result.onSuccess { booking ->
-                _uiState.value = AddBookingUiState.Success(booking)
+                _uiState.value = AddBookingUiState.Success(booking, isOffline = false)
                 notificationHelper.showBookingSuccessNotification(booking.date, booking.time)
             }.onFailure { exception ->
                 when (exception) {
                     is IOException -> {
-                        // Network error: Handled by a separate notification
-                        // The UI will show an error, but the main feedback is the notification
-                        _uiState.value = AddBookingUiState.Error("Network error: Saved locally.")
+                        _uiState.value = AddBookingUiState.Success(null, isOffline = true)
                     }
                     is HttpException -> {
-                        // Server error (e.g., 409 Conflict)
                         _uiState.value = AddBookingUiState.Error("Server error: ${exception.message()}")
                     }
                     else -> {
-                        // Other errors
                         _uiState.value = AddBookingUiState.Error(exception.message ?: "An unknown error occurred")
                     }
                 }
